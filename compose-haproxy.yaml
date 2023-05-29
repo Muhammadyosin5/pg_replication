@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build: .
+    environment:
+      - POSTGRES_HOST=pgpool
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=s3cret
+      - POSTGRES_DB=test_db
+    ports:
+      - "8000:8000"
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0" ]
+  pgprimary:
+    image: bitnami/postgresql:13.1.0
+    ports:
+      - 5432
+    volumes:
+      - pgprimary_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
+      - POSTGRESQL_PASSWORD=s3cret
+      - POSTGRESQL_DATABASE=test_db
+  pgreplica:
+    image: bitnami/postgresql:13.1.0
+    ports:
+      - 5432
+    depends_on:
+      - pgprimary
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
+      - POSTGRESQL_MASTER_HOST=pgprimary
+      - POSTGRESQL_PASSWORD=s3cret
+
+  pgreplica2:
+    image: bitnami/postgresql:13.1.0
+    ports:
+      - 5432
+    depends_on:
+      - pgprimary
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
+      - POSTGRESQL_MASTER_HOST=pgprimary
+      - POSTGRESQL_PASSWORD=s3cret
+volumes:
+  pgprimary_data:
