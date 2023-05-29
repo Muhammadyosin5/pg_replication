@@ -4,14 +4,16 @@ services:
   fastapi:
     build: .
     environment:
-      - POSTGRES_HOST=pgpool
+      - POSTGRES_HOST=pool
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=s3cret
       - POSTGRES_DB=test_db
     ports:
-      - "8000:8000"
+      - 8000
     command: [ "uvicorn", "main:app", "--host", "0.0.0.0" ]
+    deploy:
+      replicas: 2
   pgprimary:
     image: bitnami/postgresql:13.1.0
     ports:
@@ -36,27 +38,15 @@ services:
       - POSTGRESQL_REPLICATION_PASSWORD=s3cret
       - POSTGRESQL_MASTER_HOST=pgprimary
       - POSTGRESQL_PASSWORD=s3cret
-
-  pgreplica2:
-    image: bitnami/postgresql:13.1.0
-    ports:
-      - 5432
-    depends_on:
-      - pgprimary
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_REPLICATION_USER=postgres
-      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
-      - POSTGRESQL_MASTER_HOST=pgprimary
-      - POSTGRESQL_PASSWORD=s3cret
   pgpool:
     image: bitnami/pgpool:4.2.1
+    hostname: pool
     ports:
-      - 5432:5432
+      - "5433:5432"
     depends_on:
       - pgprimary
     environment:
-      - PGPOOL_BACKEND_NODES=0:pgprimary:5432:0:primary:ALWAYS_PRIMARY,1:pgreplica:5432:5:replica,2:pgreplica2:5432:5:replica
+      - PGPOOL_BACKEND_NODES=0:pgprimary:5432:0:primary:ALWAYS_PRIMARY,1:pgreplica:5432:5:replica
       - PGPOOL_POSTGRES_USERNAME=postgres
       - PGPOOL_POSTGRES_PASSWORD=s3cret
       - PGPOOL_ADMIN_USERNAME=admin
@@ -67,5 +57,14 @@ services:
       - PGPOOL_MAX_POOL=1
       - PGPOOL_SR_CHECK_USER=postgres
       - PGPOOL_SR_CHECK_PASSWORD=s3cret
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "1337:80"
+    depends_on:
+      - fastapi
+
 volumes:
   pgprimary_data:

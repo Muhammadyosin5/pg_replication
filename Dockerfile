@@ -7,8 +7,9 @@ ENV MYPATH=/home/app/code
 RUN apk add --update py-pip
 
 WORKDIR $MYPATH
-COPY requirements.txt $MYPATH
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
+RUN pip install fastapi uvicorn psycopg2-binary
 COPY . $MYPATH
+
 
 EXPOSE 8000

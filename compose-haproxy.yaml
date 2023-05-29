@@ -13,7 +13,7 @@ services:
       - "8000:8000"
     command: [ "uvicorn", "main:app", "--host", "0.0.0.0" ]
   pgprimary:
-    image: bitnami/postgresql:13.1.0
+    image: bitnami/postgresql
     ports:
       - 5432
     volumes:
@@ -25,7 +25,7 @@ services:
       - POSTGRESQL_PASSWORD=s3cret
       - POSTGRESQL_DATABASE=test_db
   pgreplica:
-    image: bitnami/postgresql:13.1.0
+    image: bitnami/postgresql
     ports:
       - 5432
     depends_on:
@@ -38,7 +38,7 @@ services:
       - POSTGRESQL_PASSWORD=s3cret
 
   pgreplica2:
-    image: bitnami/postgresql:13.1.0
+    image: bitnami/postgresql
     ports:
       - 5432
     depends_on:
@@ -49,5 +49,11 @@ services:
       - POSTGRESQL_REPLICATION_PASSWORD=s3cret
       - POSTGRESQL_MASTER_HOST=pgprimary
       - POSTGRESQL_PASSWORD=s3cret
+  hp:
+    build: ./haproxy
+    ports:
+      - "8989:8989"
+      - "1337:80"
+
 volumes:
   pgprimary_data:
