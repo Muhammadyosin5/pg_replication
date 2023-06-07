@@ -14,8 +14,9 @@ services:
     command: [ "uvicorn", "main:app", "--host", "0.0.0.0" ]
     deploy:
       replicas: 2
+
   pgprimary:
-    image: bitnami/postgresql:13.1.0
+    image: bitnami/postgresql
     ports:
       - 5432
     volumes:
@@ -27,7 +28,7 @@ services:
       - POSTGRESQL_PASSWORD=s3cret
       - POSTGRESQL_DATABASE=test_db
   pgreplica:
-    image: bitnami/postgresql:13.1.0
+    image: bitnami/postgresql
     ports:
       - 5432
     depends_on:
@@ -39,7 +40,7 @@ services:
       - POSTGRESQL_MASTER_HOST=pgprimary
       - POSTGRESQL_PASSWORD=s3cret
   pgpool:
-    image: bitnami/pgpool:4.2.1
+    image: bitnami/pgpool
     hostname: pool
     ports:
       - "5433:5432"
@@ -60,7 +61,7 @@ services:
 
   nginx:
     build: ./nginx
-    container_name: nginx
+    container_name: pg_pool_nginx
     ports:
       - "1337:80"
     depends_on:
@@ -68,3 +69,5 @@ services:
 
 volumes:
   pgprimary_data:
+    external: true
+    name: pgprimary_data

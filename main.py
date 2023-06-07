@@ -39,7 +39,7 @@ async def root():
     cur.execute(query)
     datas = cur.fetchone()
     count += 1
-    return {f'{socket.gethostname()}': count}
+    return {f'{socket.gethostname()}': count, 'data': datas}
 
 
 @app.get("/hello/{name}")

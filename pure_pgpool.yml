@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  master:
+    container_name: base_postgres
+    image: bitnami/postgresql
+    ports:
+      - 5432
+    volumes:
+      - master_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
+      - POSTGRESQL_PASSWORD=s3cret
+      - POSTGRESQL_DATABASE=postgres
+  slave_1:
+    image: bitnami/postgresql
+    ports:
+      - 5432
+    volumes:
+      - slave_1_volume:/bitnami/postgresql
+    depends_on:
+      - master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=s3cret
+      - POSTGRESQL_MASTER_HOST=master
+      - POSTGRESQL_PASSWORD=s3cret
+
+  pgpool:
+    image: bitnami/pgpool
+    ports:
+      - 5432:5432
+    depends_on:
+      - master
+    environment:
+      - PGPOOL_BACKEND_NODES=0:master:5432:0:primary:ALWAYS_PRIMARY,1:slave_1:5432:5:replica,2:slave_2:5432:5:replica
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=s3cret
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=s3cret
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_ENABLE_STATEMENT_LOAD_BALANCING=yes
+      - PGPOOL_NUM_INIT_CHILDREN=10
+      - PGPOOL_MAX_POOL=10000
+      - PGPOOL_SR_CHECK_USER=postgres
+      - PGPOOL_SR_CHECK_PASSWORD=s3cret
+
+volumes:
+  master_data:
+    external: true
+    name: master_data
+  slave_1_volume:
+    external: true
+    name: slave_1_volume
